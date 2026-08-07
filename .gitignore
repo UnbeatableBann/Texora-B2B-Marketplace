@@ -133,3 +133,4 @@ htmlcov/
 # extra files
 marketplaceb2btextile.vercel.app_.png
 remove_bg.py
+*.db

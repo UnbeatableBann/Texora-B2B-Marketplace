@@ -16,7 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.api.endpoints import auth, catalog, commerce, onboarding, recommendations, ai
+from app.api.endpoints import ai, auth, catalog, commerce, onboarding, recommendations
 
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
 app.include_router(onboarding.router, prefix=f"{settings.API_V1_STR}/onboarding", tags=["onboarding"])

@@ -1,0 +1,14 @@
+.venv
+.env
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.coverage
+htmlcov
+.tox
+.git
+.idea
+.vscode
+fabrichub.db
