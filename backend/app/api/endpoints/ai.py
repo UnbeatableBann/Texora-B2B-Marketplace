@@ -1,13 +1,13 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_optional_current_user
+from app.api.deps import get_optional_current_user
 from app.db.database import get_db
-from app.models.user import User
 from app.models.profile import BuyerProfile
+from app.models.user import User
 from app.services.ai_service import ai_provider
 
 router = APIRouter()
@@ -15,24 +15,24 @@ router = APIRouter()
 
 class ChatRequest(BaseModel):
     message: str
-    context: Dict[str, Any] = Field(default_factory=dict)
+    context: dict[str, Any] = Field(default_factory=dict)
 
 
 class ChatResponse(BaseModel):
     response: str
-    products: Optional[List[Dict[str, Any]]] = None
-    actions: List[Dict[str, str]] = Field(default_factory=list)
+    products: list[dict[str, Any]] | None = None
+    actions: list[dict[str, str]] = Field(default_factory=list)
 
 
 @router.post("/chat", response_model=ChatResponse)
 def ai_chat(
     request: ChatRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_optional_current_user)
+    current_user: User = Depends(get_optional_current_user),
 ):
     msg = request.message
     user_context = ""
-    
+
     if current_user and current_user.role == "buyer":
         buyer_profile = (
             db.query(BuyerProfile)

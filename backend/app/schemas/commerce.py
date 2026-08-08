@@ -1,18 +1,23 @@
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+
+from pydantic import BaseModel
+
 from app.schemas.catalog import ProductRead
+
 
 # Cart Schemas
 class CartItemBase(BaseModel):
     product_id: int
     quantity: int
 
+
 class CartItemCreate(CartItemBase):
     pass
 
+
 class CartItemUpdate(BaseModel):
     quantity: int
+
 
 class CartItemRead(CartItemBase):
     id: int
@@ -22,13 +27,15 @@ class CartItemRead(CartItemBase):
     class Config:
         from_attributes = True
 
+
 class ShoppingCartRead(BaseModel):
     id: int
     buyer_id: int
-    items: List[CartItemRead] = []
+    items: list[CartItemRead] = []
 
     class Config:
         from_attributes = True
+
 
 # Order Schemas
 class OrderItemBase(BaseModel):
@@ -36,7 +43,8 @@ class OrderItemBase(BaseModel):
     quantity: int
     purchase_price: float
     product_name: str
-    primary_image_url: Optional[str] = None
+    primary_image_url: str | None = None
+
 
 class OrderItemRead(OrderItemBase):
     id: int
@@ -45,6 +53,7 @@ class OrderItemRead(OrderItemBase):
 
     class Config:
         from_attributes = True
+
 
 class ShippingAddressBase(BaseModel):
     recipient_name: str
@@ -55,23 +64,27 @@ class ShippingAddressBase(BaseModel):
     postal_code: str
     country: str
 
+
 class OrderBase(BaseModel):
     shipping_address: ShippingAddressBase
     total_amount: float
     status: str
 
+
 class OrderCreate(BaseModel):
     shipping_address: ShippingAddressBase
+
 
 class OrderRead(OrderBase):
     id: int
     order_number: str
     buyer_id: int
     created_at: datetime
-    items: List[OrderItemRead] = []
+    items: list[OrderItemRead] = []
 
     class Config:
         from_attributes = True
+
 
 class OrderUpdate(BaseModel):
     status: str

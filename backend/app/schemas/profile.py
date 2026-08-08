@@ -1,13 +1,17 @@
+from typing import Any
+
 from pydantic import BaseModel
-from typing import Dict, Any, Optional
+
 
 class BuyerProfileBase(BaseModel):
     company_name: str
-    industry: Optional[str] = None
-    preferences: Optional[Dict[str, Any]] = None
+    industry: str | None = None
+    preferences: dict[str, Any] | None = None
+
 
 class BuyerProfileCreate(BuyerProfileBase):
     pass
+
 
 class BuyerProfileRead(BuyerProfileBase):
     id: int
@@ -16,13 +20,16 @@ class BuyerProfileRead(BuyerProfileBase):
     class Config:
         from_attributes = True
 
+
 class SupplierProfileBase(BaseModel):
     company_name: str
-    description: Optional[str] = None
-    capabilities: Optional[Dict[str, Any]] = None
+    description: str | None = None
+    capabilities: dict[str, Any] | None = None
+
 
 class SupplierProfileCreate(SupplierProfileBase):
     pass
+
 
 class SupplierProfileRead(SupplierProfileBase):
     id: int

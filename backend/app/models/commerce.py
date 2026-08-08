@@ -1,8 +1,11 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, JSON, Boolean, Float, Enum, DateTime
+import enum
+
+from sqlalchemy import JSON, Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-import enum
+
 from app.db.base import Base
+
 
 class OrderStatus(str, enum.Enum):
     PENDING = "PENDING"
@@ -10,6 +13,7 @@ class OrderStatus(str, enum.Enum):
     PREPARING = "PREPARING"
     READY_FOR_DISPATCH = "READY_FOR_DISPATCH"
     COMPLETED = "COMPLETED"
+
 
 class ShoppingCart(Base):
     __tablename__ = "shopping_carts"
@@ -20,7 +24,9 @@ class ShoppingCart(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     buyer = relationship("User", backref="shopping_cart")
-    items = relationship("CartItem", back_populates="cart", cascade="all, delete-orphan")
+    items = relationship(
+        "CartItem", back_populates="cart", cascade="all, delete-orphan"
+    )
 
 
 class CartItem(Base):
@@ -47,7 +53,9 @@ class Order(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     buyer = relationship("User", backref="orders")
-    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+    items = relationship(
+        "OrderItem", back_populates="order", cascade="all, delete-orphan"
+    )
 
 
 class OrderItem(Base):
@@ -59,7 +67,7 @@ class OrderItem(Base):
     supplier_id = Column(Integer, ForeignKey("users.id"))
     quantity = Column(Integer, nullable=False)
     purchase_price = Column(Float, nullable=False)
-    
+
     # Store snapshot details
     product_name = Column(String, nullable=False)
     primary_image_url = Column(String)

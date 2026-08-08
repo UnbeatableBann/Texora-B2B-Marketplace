@@ -1,13 +1,14 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from sqlalchemy.orm import Session
 from app.db.database import SessionLocal
 from app.models.catalog import Category, Product, ProductStatus
-from app.models.user import User
 from app.models.profile import SupplierProfile
+from app.models.user import User
 from app.security.auth import get_password_hash
+
 
 def seed_real_products():
     db = SessionLocal()
@@ -19,28 +20,48 @@ def seed_real_products():
         supplier = User(
             email="supplier@example.com",
             hashed_password=get_password_hash("password123"),
-            role="supplier"
+            role="supplier",
         )
         db.add(supplier)
         db.commit()
         db.refresh(supplier)
-        
+
         supplier_profile = SupplierProfile(
             user_id=supplier.id,
             company_name="Global Textiles Ltd",
             description="Premium fabric manufacturer.",
-            capabilities={"capacity": "1000m/day"}
+            capabilities={"capacity": "1000m/day"},
         )
         db.add(supplier_profile)
         db.commit()
 
     # Define real categories
     categories_data = [
-        {"name": "Organic Cotton", "slug": "organic-cotton", "description": "GOTS certified organic cotton"},
-        {"name": "Linen", "slug": "linen", "description": "Premium European flax linen"},
-        {"name": "Performance", "slug": "performance", "description": "Technical and activewear fabrics"},
-        {"name": "Wool", "slug": "wool", "description": "Merino and blended wool fabrics"},
-        {"name": "Blends", "slug": "blends", "description": "Versatile poly-cotton and other blends"}
+        {
+            "name": "Organic Cotton",
+            "slug": "organic-cotton",
+            "description": "GOTS certified organic cotton",
+        },
+        {
+            "name": "Linen",
+            "slug": "linen",
+            "description": "Premium European flax linen",
+        },
+        {
+            "name": "Performance",
+            "slug": "performance",
+            "description": "Technical and activewear fabrics",
+        },
+        {
+            "name": "Wool",
+            "slug": "wool",
+            "description": "Merino and blended wool fabrics",
+        },
+        {
+            "name": "Blends",
+            "slug": "blends",
+            "description": "Versatile poly-cotton and other blends",
+        },
     ]
 
     cats = {}
@@ -65,8 +86,13 @@ def seed_real_products():
             "status": ProductStatus.PUBLISHED.value,
             "category_id": cats["organic-cotton"].id,
             "supplier_id": supplier.id,
-            "specifications": {"gsm": 400, "width": "1.8m", "knit": "French Terry", "certification": "GOTS"},
-            "primary_image_url": "https://images.unsplash.com/photo-1601051515284-9df21f7dbbe4?q=80&w=800&auto=format&fit=crop"
+            "specifications": {
+                "gsm": 400,
+                "width": "1.8m",
+                "knit": "French Terry",
+                "certification": "GOTS",
+            },
+            "primary_image_url": "https://images.unsplash.com/photo-1601051515284-9df21f7dbbe4?q=80&w=800&auto=format&fit=crop",
         },
         {
             "name": "Belgian Washed Linen",
@@ -78,8 +104,13 @@ def seed_real_products():
             "status": ProductStatus.PUBLISHED.value,
             "category_id": cats["linen"].id,
             "supplier_id": supplier.id,
-            "specifications": {"gsm": 180, "width": "1.4m", "weave": "Plain", "origin": "Belgium"},
-            "primary_image_url": "https://images.unsplash.com/photo-1598463959954-5264b3014e7a?q=80&w=800&auto=format&fit=crop"
+            "specifications": {
+                "gsm": 180,
+                "width": "1.4m",
+                "weave": "Plain",
+                "origin": "Belgium",
+            },
+            "primary_image_url": "https://images.unsplash.com/photo-1598463959954-5264b3014e7a?q=80&w=800&auto=format&fit=crop",
         },
         {
             "name": "Moisture-Wicking Spandex Blend",
@@ -91,8 +122,13 @@ def seed_real_products():
             "status": ProductStatus.PUBLISHED.value,
             "category_id": cats["performance"].id,
             "supplier_id": supplier.id,
-            "specifications": {"gsm": 220, "width": "1.5m", "composition": "80% Nylon, 20% Spandex", "features": "Moisture-wicking, UPF 50+"},
-            "primary_image_url": "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?q=80&w=800&auto=format&fit=crop"
+            "specifications": {
+                "gsm": 220,
+                "width": "1.5m",
+                "composition": "80% Nylon, 20% Spandex",
+                "features": "Moisture-wicking, UPF 50+",
+            },
+            "primary_image_url": "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?q=80&w=800&auto=format&fit=crop",
         },
         {
             "name": "Super 120s Merino Wool Suiting",
@@ -104,8 +140,13 @@ def seed_real_products():
             "status": ProductStatus.PUBLISHED.value,
             "category_id": cats["wool"].id,
             "supplier_id": supplier.id,
-            "specifications": {"gsm": 250, "width": "1.5m", "composition": "100% Merino Wool", "grade": "Super 120s"},
-            "primary_image_url": "https://images.unsplash.com/photo-1549444355-680f49635e69?q=80&w=800&auto=format&fit=crop"
+            "specifications": {
+                "gsm": 250,
+                "width": "1.5m",
+                "composition": "100% Merino Wool",
+                "grade": "Super 120s",
+            },
+            "primary_image_url": "https://images.unsplash.com/photo-1549444355-680f49635e69?q=80&w=800&auto=format&fit=crop",
         },
         {
             "name": "Recycled Poly-Cotton Twill",
@@ -117,11 +158,16 @@ def seed_real_products():
             "status": ProductStatus.PUBLISHED.value,
             "category_id": cats["blends"].id,
             "supplier_id": supplier.id,
-            "specifications": {"gsm": 300, "width": "1.6m", "composition": "65% Recycled Poly, 35% Cotton", "weave": "Twill"},
-            "primary_image_url": "https://images.unsplash.com/photo-1620799140188-3b2a02fd9a77?q=80&w=800&auto=format&fit=crop"
-        }
+            "specifications": {
+                "gsm": 300,
+                "width": "1.6m",
+                "composition": "65% Recycled Poly, 35% Cotton",
+                "weave": "Twill",
+            },
+            "primary_image_url": "https://images.unsplash.com/photo-1620799140188-3b2a02fd9a77?q=80&w=800&auto=format&fit=crop",
+        },
     ]
-    
+
     count = 0
     for pd in products_data:
         exists = db.query(Product).filter(Product.name == pd["name"]).first()
@@ -129,9 +175,10 @@ def seed_real_products():
             p = Product(**pd)
             db.add(p)
             count += 1
-            
+
     db.commit()
     print(f"Seeding complete. Added {count} new real products.")
+
 
 if __name__ == "__main__":
     seed_real_products()

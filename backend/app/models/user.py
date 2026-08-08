@@ -1,11 +1,15 @@
-from sqlalchemy import Column, Integer, String, Boolean, Enum
 import enum
+
+from sqlalchemy import Boolean, Column, Enum, Integer, String
+
 from app.db.base import Base
+
 
 class UserRole(str, enum.Enum):
     BUYER = "buyer"
     SUPPLIER = "supplier"
     ADMIN = "admin"
+
 
 class User(Base):
     __tablename__ = "users"

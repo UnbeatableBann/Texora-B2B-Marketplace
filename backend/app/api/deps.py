@@ -1,16 +1,16 @@
-from typing import Generator, Annotated, Optional
+import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-import jwt
 
 from app.db.database import get_db
-from app.security.auth import SECRET_KEY, ALGORITHM
-from app.schemas.user import TokenData
-from app.repositories.user_repo import get_user_by_email
 from app.models.user import User
+from app.repositories.user_repo import get_user_by_email
+from app.schemas.user import TokenData
+from app.security.auth import ALGORITHM, SECRET_KEY
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/api/v1/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
 
 def get_current_user(
     db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
@@ -33,9 +33,13 @@ def get_current_user(
         raise credentials_exception
     return user
 
+
 def get_optional_current_user(
-    db: Session = Depends(get_db), token: Optional[str] = Depends(OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False))
-) -> Optional[User]:
+    db: Session = Depends(get_db),
+    token: str | None = Depends(
+        OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+    ),
+) -> User | None:
     if not token:
         return None
     try:

@@ -1,13 +1,17 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, JSON, Boolean, Float, Enum
-from sqlalchemy.orm import relationship
-from app.db.base import Base
 import enum
+
+from sqlalchemy import JSON, Boolean, Column, Float, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import relationship
+
+from app.db.base import Base
+
 
 class ProductStatus(str, enum.Enum):
     DRAFT = "DRAFT"
     PUBLISHED = "PUBLISHED"
     OUT_OF_STOCK = "OUT_OF_STOCK"
     ARCHIVED = "ARCHIVED"
+
 
 class Category(Base):
     __tablename__ = "categories"
@@ -32,10 +36,10 @@ class Product(Base):
     currency = Column(String, default="USD")
     stock_quantity = Column(Integer, default=0)
     status = Column(String, default=ProductStatus.DRAFT.value)
-    
+
     category_id = Column(Integer, ForeignKey("categories.id"))
     supplier_id = Column(Integer, ForeignKey("users.id"))
-    
+
     specifications = Column(JSON)
     primary_image_url = Column(String)
 

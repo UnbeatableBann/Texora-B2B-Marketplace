@@ -1,17 +1,18 @@
-import sys
 import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.db.database import SessionLocal
 from app.models.catalog import Category, Product, ProductStatus
-from app.models.user import User
 from app.models.profile import SupplierProfile
+from app.models.user import User
 from app.security.auth import get_password_hash
+
 
 def seed_extra_products():
     db = SessionLocal()
-    
+
     # 1. Ensure supplier exists
     supplier_email = "premiumtextiles@example.com"
     supplier = db.query(User).filter(User.email == supplier_email).first()
@@ -19,17 +20,17 @@ def seed_extra_products():
         supplier = User(
             email=supplier_email,
             hashed_password=get_password_hash("password123"),
-            role="supplier"
+            role="supplier",
         )
         db.add(supplier)
         db.commit()
         db.refresh(supplier)
-        
+
         profile = SupplierProfile(
             user_id=supplier.id,
             company_name="Premium Global Textiles",
             description="Leading supplier of premium and sustainable fabrics.",
-            capabilities={"location": "Milan, Italy"}
+            capabilities={"location": "Milan, Italy"},
         )
         db.add(profile)
         db.commit()
@@ -38,7 +39,7 @@ def seed_extra_products():
     cat_names = ["Silk", "Linen", "Denim", "Polyester", "Organic Cotton", "Cotton"]
     categories = {}
     for cn in cat_names:
-        slug = cn.lower().replace(' ', '-')
+        slug = cn.lower().replace(" ", "-")
         cat = db.query(Category).filter(Category.slug == slug).first()
         if not cat:
             cat = Category(name=cn, slug=slug, description=f"Premium {cn}")
@@ -46,7 +47,7 @@ def seed_extra_products():
             db.commit()
             db.refresh(cat)
         categories[cn] = cat
-        
+
     # 3. Product definitions
     products_data = [
         # Silk
@@ -57,7 +58,12 @@ def seed_extra_products():
             "stock": 1200,
             "category": "Silk",
             "img": "/cloth/slik.png",
-            "specs": {"moq_quantity": 50, "moq_unit": "yard", "price_unit": "yard", "fabric_type": "Charmeuse"}
+            "specs": {
+                "moq_quantity": 50,
+                "moq_unit": "yard",
+                "price_unit": "yard",
+                "fabric_type": "Charmeuse",
+            },
         },
         {
             "name": "Raw Silk Noil Fabric",
@@ -66,7 +72,7 @@ def seed_extra_products():
             "stock": 800,
             "category": "Silk",
             "img": "/cloth/slik.png",
-            "specs": {"moq_quantity": 100, "moq_unit": "yard", "price_unit": "yard"}
+            "specs": {"moq_quantity": 100, "moq_unit": "yard", "price_unit": "yard"},
         },
         # Linen
         {
@@ -76,7 +82,7 @@ def seed_extra_products():
             "stock": 2500,
             "category": "Linen",
             "img": "/cloth/linen.png",
-            "specs": {"moq_quantity": 100, "moq_unit": "meter", "price_unit": "meter"}
+            "specs": {"moq_quantity": 100, "moq_unit": "meter", "price_unit": "meter"},
         },
         {
             "name": "French Washed Linen Blend",
@@ -85,7 +91,7 @@ def seed_extra_products():
             "stock": 1500,
             "category": "Linen",
             "img": "/cloth/linen.png",
-            "specs": {"moq_quantity": 200, "moq_unit": "meter", "price_unit": "meter"}
+            "specs": {"moq_quantity": 200, "moq_unit": "meter", "price_unit": "meter"},
         },
         # Denim
         {
@@ -95,7 +101,12 @@ def seed_extra_products():
             "stock": 900,
             "category": "Denim",
             "img": "/cloth/denim.png",
-            "specs": {"moq_quantity": 300, "moq_unit": "yard", "price_unit": "yard", "weight": "14oz"}
+            "specs": {
+                "moq_quantity": 300,
+                "moq_unit": "yard",
+                "price_unit": "yard",
+                "weight": "14oz",
+            },
         },
         {
             "name": "Stretch Denim Indigo Wash 11oz",
@@ -104,7 +115,12 @@ def seed_extra_products():
             "stock": 5000,
             "category": "Denim",
             "img": "/cloth/denim.png",
-            "specs": {"moq_quantity": 500, "moq_unit": "meter", "price_unit": "meter", "weight": "11oz"}
+            "specs": {
+                "moq_quantity": 500,
+                "moq_unit": "meter",
+                "price_unit": "meter",
+                "weight": "11oz",
+            },
         },
         # Polyester
         {
@@ -114,7 +130,7 @@ def seed_extra_products():
             "stock": 8000,
             "category": "Polyester",
             "img": "/cloth/polyester.png",
-            "specs": {"moq_quantity": 1000, "moq_unit": "yard", "price_unit": "yard"}
+            "specs": {"moq_quantity": 1000, "moq_unit": "yard", "price_unit": "yard"},
         },
         {
             "name": "Microfiber Polyester Twill",
@@ -123,7 +139,7 @@ def seed_extra_products():
             "stock": 10000,
             "category": "Polyester",
             "img": "/cloth/polyester.png",
-            "specs": {"moq_quantity": 2000, "moq_unit": "meter", "price_unit": "meter"}
+            "specs": {"moq_quantity": 2000, "moq_unit": "meter", "price_unit": "meter"},
         },
         # Organic Cotton
         {
@@ -133,7 +149,12 @@ def seed_extra_products():
             "stock": 3500,
             "category": "Cotton",
             "img": "/cloth/organic.png",
-            "specs": {"moq_quantity": 250, "moq_unit": "kg", "price_unit": "kg", "certification": "GOTS"}
+            "specs": {
+                "moq_quantity": 250,
+                "moq_unit": "kg",
+                "price_unit": "kg",
+                "certification": "GOTS",
+            },
         },
         {
             "name": "Organic Cotton French Terry 400 GSM",
@@ -142,8 +163,13 @@ def seed_extra_products():
             "stock": 1200,
             "category": "Cotton",
             "img": "/cloth/organic.png",
-            "specs": {"moq_quantity": 150, "moq_unit": "yard", "price_unit": "yard", "weight": "400 GSM"}
-        }
+            "specs": {
+                "moq_quantity": 150,
+                "moq_unit": "yard",
+                "price_unit": "yard",
+                "weight": "400 GSM",
+            },
+        },
     ]
 
     for data in products_data:
@@ -160,12 +186,13 @@ def seed_extra_products():
                 category_id=categories[data["category"]].id,
                 supplier_id=supplier.id,
                 specifications=data["specs"],
-                primary_image_url=data["img"]
+                primary_image_url=data["img"],
             )
             db.add(product)
-    
+
     db.commit()
     print("Extra products seeded successfully!")
+
 
 if __name__ == "__main__":
     seed_extra_products()
