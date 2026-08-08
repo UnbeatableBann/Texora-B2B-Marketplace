@@ -21,9 +21,11 @@ class ChatResponse(BaseModel):
 @router.post("/chat", response_model=ChatResponse)
 def ai_chat(
     request: ChatRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_optional_current_user)
+):
     msg = request.message
     user_context = ""
-    
     if current_user and current_user.role == "buyer":
         from app.models.profile import BuyerProfile
         buyer_profile = db.query(BuyerProfile).filter(BuyerProfile.user_id == current_user.id).first()
