@@ -13,6 +13,7 @@ help:
 	@echo "  make build-frontend - Build the frontend for production"
 	@echo "  make build-backend  - Build the backend Docker image"
 	@echo "  make push-backend   - Push the backend Docker image to Docker Hub"
+	@echo "  make run-backend-docker - Run the backend Docker image locally on port 8080"
 	@echo "  make clean          - Remove dependencies, environments, and build artifacts"
 
 # --- Setup ---
@@ -58,6 +59,10 @@ docker-image: build-backend push-backend
 build-backend:
 	@echo "Building backend Docker image..."
 	cd backend && docker build -t unbeatablebann/texora-b2b-marketplace:latest .
+
+run-backend-docker:
+	@echo "Running backend Docker image locally on port 8080..."
+	docker run -p 8080:8080 -e PORT=8080 unbeatablebann/texora-b2b-marketplace:latest
 
 push-backend:
 	@echo "Pushing backend Docker image..."
