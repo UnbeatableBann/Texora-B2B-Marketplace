@@ -96,7 +96,7 @@ export const BuyerOnboardingForm = ({ onComplete }: { onComplete: () => void }) 
     }
   };
 
-  const OptionCard = ({ label, selected, onClick, multiple = false }: any) => (
+  const OptionCard = ({ label, selected, onClick }: any) => (
     <div 
       onClick={onClick}
       style={{
@@ -118,7 +118,7 @@ export const BuyerOnboardingForm = ({ onComplete }: { onComplete: () => void }) 
   );
 
   const toggleArray = (field: keyof typeof formData, value: string) => {
-    setFormData(prev => {
+    setFormData((prev: any) => {
       const arr = prev[field] as string[];
       if (arr.includes(value)) {
         return { ...prev, [field]: arr.filter(v => v !== value) };
@@ -150,8 +150,8 @@ export const BuyerOnboardingForm = ({ onComplete }: { onComplete: () => void }) 
                   <OptionCard 
                     key={type} 
                     label={type} 
-                    selected={formData.business_type === type}
-                    onClick={() => setFormData({ ...formData, business_type: type })}
+                    selected={formData.business_type.includes(type)}
+                    onClick={() => toggleArray('business_type', type)}
                   />
                 ))}
               </div>

@@ -33,10 +33,10 @@ export const CreateProductPage = () => {
     getCategories().then(setCategories).catch(console.error);
   }, []);
 
-  const form = useForm<ProductFormValues>({
+  const form = useForm<any>({
     resolver: zodResolver(productSchema) as any,
     defaultValues: {
-      name: '', description: '', price: 0, stock_quantity: 0, primary_image_url: '', status: 'PUBLISHED'
+      name: '', description: '', price: 0, stock_quantity: 0, status: 'PUBLISHED'
     }
   });
 

@@ -3,11 +3,10 @@ import { getProducts } from '../../../services/catalogService';
 import { getRecommendations } from '../../../services/aiService';
 import { ProductCard } from '../components/ProductCard';
 import { Search, Filter, LayoutGrid, List, ChevronRight, X, SlidersHorizontal } from 'lucide-react';
-import { useSearchParams, useNavigate } from 'react-router';
+import { useSearchParams } from 'react-router';
 
 export const MarketplacePage = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   
   const initialQ = searchParams.get('q') || '';
   const categoryParam = searchParams.get('category') || '';

@@ -22,7 +22,7 @@ export const GoogleSignInButton = ({ role = 'buyer' }: Props) => {
         const response = await googleAuth(credentialResponse.credential, role);
         if (response && response.access_token) {
           setToken(response.access_token, response.refresh_token);
-          if (onSuccess) onSuccess();
+
           await fetchUser();
           navigate(redirectUrl);
         }

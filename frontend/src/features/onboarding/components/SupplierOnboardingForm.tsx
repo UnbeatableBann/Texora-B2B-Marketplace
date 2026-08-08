@@ -135,7 +135,7 @@ export const SupplierOnboardingForm = ({ onComplete }: { onComplete: () => void 
     }
   };
 
-  const OptionCard = ({ label, selected, onClick, multiple = false }: any) => (
+  const OptionCard = ({ label, selected, onClick }: any) => (
     <div 
       onClick={onClick}
       style={{
@@ -157,7 +157,7 @@ export const SupplierOnboardingForm = ({ onComplete }: { onComplete: () => void 
   );
 
   const toggleArray = (field: keyof typeof formData, value: string) => {
-    setFormData(prev => {
+    setFormData((prev: any) => {
       const arr = prev[field] as string[];
       if (arr.includes(value)) {
         return { ...prev, [field]: arr.filter(v => v !== value) };
