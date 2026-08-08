@@ -18,6 +18,16 @@ export const AppLayout = () => {
   }, [fetchCart]);
 
   useEffect(() => {
+    if (isAuthenticated && user) {
+      if (!user.onboarding_completed && location.pathname !== '/onboarding') {
+        navigate('/onboarding', { replace: true });
+      } else if (user.onboarding_completed && location.pathname === '/onboarding') {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, location.pathname, navigate]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
         setIsSearchFocused(false);

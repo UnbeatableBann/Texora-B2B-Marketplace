@@ -17,8 +17,7 @@ const productSchema = z.object({
   category_id: z.coerce.number().min(1, 'Category is required'),
   price: z.coerce.number().min(0, 'Price must be positive'),
   stock_quantity: z.coerce.number().min(0, 'Stock must be positive'),
-  primary_image_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
+  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED', 'OUT_OF_STOCK']),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -29,6 +28,8 @@ export const EditProductPage = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema) as any,
@@ -47,9 +48,11 @@ export const EditProductPage = () => {
           category_id: product.category?.id || 1,
           price: product.price,
           stock_quantity: product.stock_quantity,
-          primary_image_url: product.primary_image_url || '',
           status: product.status,
         });
+        if (product.primary_image_url) {
+          setImagePreview(product.primary_image_url);
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -59,10 +62,27 @@ export const EditProductPage = () => {
     setSubmitting(true);
     try {
       await api.patch(`/catalog/products/${id}`, data);
+      
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        await api.post(`/catalog/products/${id}/images`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
+      
       navigate('/dashboard/supplier/products');
     } catch (err: any) {
       alert(err.response?.data?.detail || "Failed to update product");
       setSubmitting(false);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -128,7 +148,8 @@ export const EditProductPage = () => {
                         className="flex h-10 w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                       >
                         <option value="DRAFT">DRAFT</option>
-                        <option value="PUBLISHED">PUBLISHED</option>
+                        <option value="PUBLISHED">AVAILABLE / PUBLISHED</option>
+                        <option value="OUT_OF_STOCK">OUT OF STOCK</option>
                         <option value="ARCHIVED">ARCHIVED</option>
                       </select>
                     </FormControl>
@@ -154,10 +175,19 @@ export const EditProductPage = () => {
                 )} />
               </div>
 
-              {/* @ts-ignore */}
-              <FormField control={form.control} name="primary_image_url" render={({ field }) => (
-                <FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input {...field} placeholder="https://..." /></FormControl><FormMessage /></FormItem>
-              )} />
+              <div className="space-y-2">
+                <FormLabel>Product Image</FormLabel>
+                <div className="flex items-center gap-4">
+                  <div className="w-24 h-24 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 flex items-center justify-center">
+                    {imagePreview ? (
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xs text-slate-400">No Image</span>
+                    )}
+                  </div>
+                  <Input type="file" accept="image/*" onChange={handleImageChange} className="max-w-xs cursor-pointer" />
+                </div>
+              </div>
 
               <div className="pt-4 flex justify-end gap-4">
                 <Button type="button" variant="outline" onClick={() => navigate(-1)} className="cursor-pointer">Cancel</Button>

@@ -17,8 +17,7 @@ const productSchema = z.object({
   category_id: z.coerce.number().min(1, 'Category is required'),
   price: z.coerce.number().min(0, 'Price must be positive'),
   stock_quantity: z.coerce.number().min(0, 'Stock must be positive'),
-  primary_image_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-  status: z.enum(['DRAFT', 'PUBLISHED']).default('PUBLISHED'),
+  status: z.enum(['DRAFT', 'PUBLISHED', 'OUT_OF_STOCK']).default('PUBLISHED'),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -27,6 +26,8 @@ export const CreateProductPage = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     getCategories().then(setCategories).catch(console.error);
@@ -42,15 +43,34 @@ export const CreateProductPage = () => {
   const onSubmit = async (data: ProductFormValues) => {
     setSubmitting(true);
     try {
-      await api.post('/catalog/products', {
+      const res = await api.post('/catalog/products', {
         ...data,
         currency: 'USD',
         specifications: {}
       });
+      
+      const newProductId = res.data.id;
+      
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        await api.post(`/catalog/products/${newProductId}/images`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
+      
       navigate('/dashboard/supplier/products');
     } catch (err: any) {
       alert(err.response?.data?.detail || "Failed to create product");
       setSubmitting(false);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -98,7 +118,8 @@ export const CreateProductPage = () => {
                         className="flex h-10 w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                       >
                         <option value="DRAFT">DRAFT</option>
-                        <option value="PUBLISHED">PUBLISHED</option>
+                        <option value="PUBLISHED">AVAILABLE / PUBLISHED</option>
+                        <option value="OUT_OF_STOCK">OUT OF STOCK</option>
                       </select>
                     </FormControl>
                     <FormMessage />
@@ -120,9 +141,19 @@ export const CreateProductPage = () => {
                 )} />
               </div>
 
-              <FormField control={form.control} name="primary_image_url" render={({ field }) => (
-                <FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input {...field} placeholder="https://..." /></FormControl><FormMessage /></FormItem>
-              )} />
+              <div className="space-y-2">
+                <FormLabel>Product Image</FormLabel>
+                <div className="flex items-center gap-4">
+                  <div className="w-24 h-24 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 flex items-center justify-center">
+                    {imagePreview ? (
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xs text-slate-400">No Image</span>
+                    )}
+                  </div>
+                  <Input type="file" accept="image/*" onChange={handleImageChange} className="max-w-xs cursor-pointer" />
+                </div>
+              </div>
 
               <div className="pt-4 flex justify-end gap-4">
                 <Button type="button" variant="outline" onClick={() => navigate(-1)} className="cursor-pointer">Cancel</Button>

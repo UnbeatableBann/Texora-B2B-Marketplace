@@ -57,7 +57,7 @@ export const OrderConfirmationPage = () => {
               <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: '#f4f4f5', borderRadius: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   {item.primary_image_url ? (
-                    <img src={item.primary_image_url} alt="img" style={{ width: '48px', height: '48px', borderRadius: '6px', objectFit: 'cover' }} />
+                    <img src={item.primary_image_url} alt="img" style={{ width: '48px', height: '48px', borderRadius: '6px', objectFit: 'cover' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/cloth/cotton.png'; }} />
                   ) : (
                     <div style={{ width: '48px', height: '48px', backgroundColor: '#e5e5e5', borderRadius: '6px' }} />
                   )}

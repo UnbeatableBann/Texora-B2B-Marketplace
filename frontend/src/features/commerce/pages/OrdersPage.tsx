@@ -85,7 +85,7 @@ export const OrdersPage = () => {
                   {order.items.map((item: any) => (
                     <div key={item.id} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                       <div style={{ width: '64px', height: '64px', backgroundColor: '#f0f0f0', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
-                        {item.primary_image_url && <img src={item.primary_image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="img"/>}
+                        {item.primary_image_url && <img src={item.primary_image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="img" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/cloth/cotton.png'; }} />}
                       </div>
                       <div style={{ flexGrow: 1 }}>
                         <div style={{ fontWeight: 600, fontSize: '1.05rem', color: '#111' }}>{item.product_name}</div>

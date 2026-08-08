@@ -1,18 +1,31 @@
 import { Link } from 'react-router';
-import { ShoppingCart, Heart, ShieldCheck, MapPin, Clock, Star, Box } from 'lucide-react';
+import { ShoppingCart, Heart, ShieldCheck, MapPin, Clock, Star, Box, Sparkles } from 'lucide-react';
 import { useCartStore } from '../../commerce/useCartStore';
 import { useState } from 'react';
+import { useAuthStore } from '../../auth/useAuthStore';
+import { useNavigate } from 'react-router';
 
 export const ProductCard = ({ product }: { product: any }) => {
   const addToCart = useCartStore(state => state.addToCart);
+  const user = useAuthStore(state => state.user);
+  const navigate = useNavigate();
   const [isAdding, setIsAdding] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault(); 
     e.stopPropagation();
+
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
     setIsAdding(true);
     try {
-      await addToCart(product.id, product.min_order_quantity || 1);
+      await addToCart(product.id, product.specifications?.moq_quantity || 1);
+      setIsAdded(true);
+      setTimeout(() => setIsAdded(false), 2000);
     } catch (err) {
       console.error(err);
     } finally {
@@ -45,16 +58,26 @@ export const ProductCard = ({ product }: { product: any }) => {
 
       {/* Product Image */}
       <div style={{ height: '260px', backgroundColor: 'var(--bg-color)', width: '100%', overflow: 'hidden', position: 'relative' }}>
-        {product.primary_image_url ? (
-          <img src={product.primary_image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }} />
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--fg-secondary)', fontSize: '0.85rem' }}>No Image Available</div>
-        )}
+        <img 
+          src={product.primary_image_url || '/cloth/cotton.png'} 
+          alt={product.name} 
+          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }} 
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = '/cloth/cotton.png';
+          }}
+        />
       </div>
 
       {/* Card Content */}
       <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
         
+        {product.recommendation_reason && (
+          <div style={{ padding: '0.5rem 0', marginBottom: '0.75rem', fontSize: '0.8rem', color: 'var(--primary-color)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>
+            <Sparkles size={14} /> {product.recommendation_reason}
+          </div>
+        )}
+
         {/* Category Badge */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
           <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary-color)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
@@ -84,7 +107,7 @@ export const ProductCard = ({ product }: { product: any }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: 'auto', fontSize: '0.85rem', color: 'var(--fg-secondary)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--bg-color)', paddingBottom: '0.5rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Box size={14}/> MOQ</span>
-            <span style={{ fontWeight: 600, color: 'var(--fg-color)' }}>{product.min_order_quantity || 1} units</span>
+            <span style={{ fontWeight: 600, color: 'var(--fg-color)' }}>{product.specifications?.moq_quantity || 1} {product.specifications?.moq_unit || 'units'}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--bg-color)', paddingBottom: '0.5rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14}/> Lead Time</span>
@@ -92,8 +115,8 @@ export const ProductCard = ({ product }: { product: any }) => {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.5rem' }}>
             <span>Availability</span>
-            <span style={{ fontWeight: 600, color: product.inventory_count > 0 ? 'var(--success-color)' : 'var(--error-color)' }}>
-              {product.inventory_count > 0 ? 'In Stock' : 'Out of Stock'}
+            <span style={{ fontWeight: 600, color: (product.stock_quantity > 0 && product.status !== 'OUT_OF_STOCK') ? 'var(--success-color)' : 'var(--error-color)' }}>
+              {(product.stock_quantity > 0 && product.status !== 'OUT_OF_STOCK') ? 'In Stock' : 'Out of Stock'}
             </span>
           </div>
         </div>
@@ -102,18 +125,29 @@ export const ProductCard = ({ product }: { product: any }) => {
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
           <div>
             <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary-color)', lineHeight: '1' }}>${product.price.toFixed(2)}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--fg-secondary)', marginTop: '4px' }}>per unit</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--fg-secondary)', marginTop: '4px' }}>per {product.specifications?.price_unit || 'unit'}</div>
           </div>
           
-          <button 
-            className="btn-primary" 
-            style={{ padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.9rem', borderRadius: '8px' }}
-            onClick={handleAddToCart}
-            disabled={isAdding || product.inventory_count <= 0}
-          >
-            <ShoppingCart size={16} />
-            {isAdding ? 'Adding...' : 'Add to Cart'}
-          </button>
+          {(!user || user.role === 'buyer') ? (
+            <button 
+              className="btn-primary" 
+              style={{ padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.9rem', borderRadius: '8px', backgroundColor: isAdded ? '#888' : '', borderColor: isAdded ? '#888' : '' }}
+              onClick={handleAddToCart}
+              disabled={isAdding || isAdded || product.stock_quantity <= 0 || product.status === 'OUT_OF_STOCK'}
+            >
+              <ShoppingCart size={16} />
+              {isAdding ? 'Adding...' : isAdded ? 'Added to Cart' : 'Add to Cart'}
+            </button>
+          ) : (
+            <button 
+              className="btn-primary" 
+              style={{ padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.9rem', borderRadius: '8px', opacity: 0.5, cursor: 'not-allowed' }}
+              disabled={true}
+            >
+              <ShoppingCart size={16} />
+              Supplier
+            </button>
+          )}
         </div>
 
       </div>

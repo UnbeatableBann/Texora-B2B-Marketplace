@@ -1,27 +1,94 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getProducts } from '../../../services/catalogService';
 import { getRecommendations } from '../../../services/aiService';
 import { ProductCard } from '../components/ProductCard';
 import { Search, Filter, LayoutGrid, List, ChevronRight, X, SlidersHorizontal } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router';
 
 export const MarketplacePage = () => {
-  const [products, setProducts] = useState<any[]>([]);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  
+  const initialQ = searchParams.get('q') || '';
+  const categoryParam = searchParams.get('category') || '';
+
+  const [allProducts, setAllProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialQ);
+  const [selectedCategory, setSelectedCategory] = useState<string>(categoryParam ? categoryParam : 'All Fabrics');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
+  // Sync state if URL changes externally (e.g. back navigation)
   useEffect(() => {
+    let matchedCategory = 'All Fabrics';
+
+    if (categoryParam) {
+      const categories = ['All Fabrics', 'Organic Cotton', 'Cotton', 'Silk', 'Linen', 'Polyester', 'Denim'];
+      const matched = categories.find(c => c.toLowerCase() === categoryParam.toLowerCase());
+      if (matched) matchedCategory = matched;
+      else matchedCategory = categoryParam;
+    } else if (initialQ) {
+      // Put "Organic Cotton" before "Cotton" so it matches first
+      const categories = ['Organic Cotton', 'Cotton', 'Silk', 'Linen', 'Polyester', 'Denim'];
+      const matched = categories.find(c => initialQ.toLowerCase().includes(c.toLowerCase()));
+      if (matched) matchedCategory = matched;
+    }
+
+    setSelectedCategory(matchedCategory);
+    setSearchQuery(initialQ || '');
+  }, [initialQ, categoryParam]);
+
+  useEffect(() => {
+    setLoading(true);
     Promise.all([
       getProducts(),
       getRecommendations()
     ])
       .then(([productsData]) => {
-        setProducts(productsData);
+        setAllProducts(productsData);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  const products = useMemo(() => {
+    return allProducts.filter(p => {
+      // Filter by category
+      if (selectedCategory !== 'All Fabrics' && p.category) {
+        if (selectedCategory === 'Organic Cotton') {
+          // Must be Cotton AND have "organic" in the name or description
+          if (!p.category.name.toLowerCase().includes('cotton')) return false;
+          const isOrganic = p.name?.toLowerCase().includes('organic') || p.description?.toLowerCase().includes('organic');
+          if (!isOrganic) return false;
+        } else if (selectedCategory === 'Cotton') {
+          // Must be Cotton AND NOT have "organic" in the name or description
+          if (!p.category.name.toLowerCase().includes('cotton')) return false;
+          const isOrganic = p.name?.toLowerCase().includes('organic') || p.description?.toLowerCase().includes('organic');
+          if (isOrganic) return false;
+        } else {
+          // Normal category matching
+          if (!p.category.name.toLowerCase().includes(selectedCategory.toLowerCase())) {
+            return false;
+          }
+        }
+      }
+      
+      // Filter by search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchesName = p.name?.toLowerCase().includes(q);
+        const matchesDesc = p.description?.toLowerCase().includes(q);
+        const matchesSupplier = p.supplier?.name?.toLowerCase().includes(q);
+        const matchesCategory = p.category?.name?.toLowerCase().includes(q);
+        if (!matchesName && !matchesDesc && !matchesSupplier && !matchesCategory) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }, [allProducts, searchQuery, selectedCategory]);
 
   const FilterContent = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
@@ -43,9 +110,14 @@ export const MarketplacePage = () => {
         <div>
           <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--fg-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Categories</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {['All Fabrics', 'Cotton', 'Silk', 'Linen', 'Polyester', 'Denim'].map(cat => (
-              <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', fontSize: '0.95rem', color: 'var(--fg-color)', fontWeight: cat === 'All Fabrics' ? 600 : 500 }}>
-                <input type="checkbox" defaultChecked={cat === 'All Fabrics'} style={{ width: '18px', height: '18px', accentColor: 'var(--primary-color)' }} /> {cat}
+            {['All Fabrics', 'Organic Cotton', 'Cotton', 'Silk', 'Linen', 'Polyester', 'Denim'].map(cat => (
+              <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', fontSize: '0.95rem', color: 'var(--fg-color)', fontWeight: cat === selectedCategory ? 600 : 500 }}>
+                <input 
+                  type="checkbox" 
+                  checked={cat === selectedCategory} 
+                  onChange={() => setSelectedCategory(cat)}
+                  style={{ width: '18px', height: '18px', accentColor: 'var(--primary-color)' }} 
+                /> {cat}
               </label>
             ))}
           </div>

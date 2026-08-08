@@ -7,6 +7,7 @@ import { SupplierOnboardingForm } from '../components/SupplierOnboardingForm';
 
 export const OnboardingPage = () => {
   const user = useAuthStore(state => state.user);
+  const fetchUser = useAuthStore(state => state.fetchUser);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
@@ -14,7 +15,8 @@ export const OnboardingPage = () => {
     const checkProfile = async () => {
       try {
         await getMyProfile();
-        // If successful, they have a profile, go to dashboard
+        // If successful, they have a profile, ensure user state is updated, then go to dashboard
+        await fetchUser();
         navigate('/');
       } catch (err: any) {
         if (err.response?.status === 404) {
@@ -26,10 +28,17 @@ export const OnboardingPage = () => {
         }
       }
     };
-    if (user) {
+    if (user && !user.onboarding_completed) {
       checkProfile();
+    } else if (user?.onboarding_completed) {
+      navigate('/');
     }
-  }, [navigate, user]);
+  }, [navigate, user, fetchUser]);
+
+  const handleComplete = async () => {
+    await fetchUser();
+    navigate('/');
+  };
 
   if (loading) return <div style={{ padding: '4rem 0', textAlign: 'center', color: '#666' }}>Loading your profile...</div>;
 
@@ -45,9 +54,9 @@ export const OnboardingPage = () => {
         
         <div>
           {user?.role === 'buyer' ? (
-            <BuyerOnboardingForm onComplete={() => navigate('/')} />
+            <BuyerOnboardingForm onComplete={handleComplete} />
           ) : (
-            <SupplierOnboardingForm onComplete={() => navigate('/')} />
+            <SupplierOnboardingForm onComplete={handleComplete} />
           )}
         </div>
       </div>

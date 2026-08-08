@@ -25,6 +25,11 @@ app.include_router(commerce.router, prefix=f"{settings.API_V1_STR}/commerce", ta
 app.include_router(recommendations.router, prefix=f"{settings.API_V1_STR}/recommendations", tags=["recommendations"])
 app.include_router(ai.router, prefix=f"{settings.API_V1_STR}/ai", tags=["ai"])
 
+from fastapi.staticfiles import StaticFiles
+import os
+
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 @app.get("/health")
 def health_check():
     return {"status": "ok"}

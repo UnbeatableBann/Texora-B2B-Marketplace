@@ -134,3 +134,12 @@ htmlcov/
 marketplaceb2btextile.vercel.app_.png
 remove_bg.py
 *.db
+*.csv
+backend/seed_csv.py
+backend/update_images.py
+
+# Media/Downloads
+/*.mp4
+/*.jpg
+/*.png
+/*.jpeg

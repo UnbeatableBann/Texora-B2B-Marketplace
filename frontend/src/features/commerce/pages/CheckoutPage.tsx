@@ -132,7 +132,7 @@ export const CheckoutPage = () => {
                 <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <div style={{ width: '56px', height: '56px', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
-                      {item.product.primary_image_url && <img src={item.product.primary_image_url} alt="img" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                      {item.product.primary_image_url && <img src={item.product.primary_image_url} alt="img" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/cloth/cotton.png'; }} />}
                     </div>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--fg-color)' }}>{item.product.name}</div>

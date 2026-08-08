@@ -43,7 +43,12 @@ export const CartPage = () => {
                 
                 <div style={{ width: '120px', height: '120px', backgroundColor: 'var(--bg-color)', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, border: '1px solid var(--border-color)' }}>
                   {item.product.primary_image_url ? (
-                    <img src={item.product.primary_image_url} alt={item.product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img 
+                      src={item.product.primary_image_url} 
+                      alt={item.product.name} 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/cloth/cotton.png'; }}
+                    />
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.8rem', color: 'var(--fg-secondary)' }}>No Image</div>
                   )}

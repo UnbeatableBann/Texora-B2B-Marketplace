@@ -17,6 +17,7 @@ export const ProductDetailsPage = () => {
   const [similarProducts, setSimilarProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export const ProductDetailsPage = () => {
       ])
         .then(([prodData, similarData]) => {
           setProduct(prodData);
-          setQuantity(prodData.min_order_quantity || 1);
+          setQuantity(prodData.specifications?.moq_quantity || 1);
           setSimilarProducts(similarData);
         })
         .catch(console.error)
@@ -38,10 +39,18 @@ export const ProductDetailsPage = () => {
 
   const handleAddToCart = async () => {
     if (!product) return;
+    
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
     setAdding(true);
     try {
       await addToCart(product.id, quantity);
-      navigate('/cart');
+      setIsAdded(true);
+      setTimeout(() => setIsAdded(false), 2000);
+      // Removed navigate('/cart') so they can see the button change
     } catch (err) {
       alert("Failed to add to cart");
     } finally {
@@ -52,7 +61,7 @@ export const ProductDetailsPage = () => {
   if (loading) return <div style={{ padding: '4rem 0', textAlign: 'center', color: 'var(--fg-secondary)' }}>Loading product details...</div>;
   if (!product) return <div style={{ padding: '4rem 0', textAlign: 'center', color: 'var(--fg-secondary)' }}>Product not found</div>;
 
-  const inStock = product.inventory_count > 0;
+  const inStock = product.stock_quantity > 0 && product.status !== 'OUT_OF_STOCK';
 
   return (
     <div className="container-custom" style={{ padding: '2rem 0' }}>
@@ -65,11 +74,15 @@ export const ProductDetailsPage = () => {
         
         {/* Column 1: Gallery */}
         <div style={{ backgroundColor: 'var(--card-bg)', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', top: '90px' }}>
-          {product.primary_image_url ? (
-            <img src={product.primary_image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <span style={{ color: '#aaa', fontWeight: 500 }}>No Image Available</span>
-          )}
+          <img 
+            src={product.primary_image_url || '/cloth/cotton.png'} 
+            alt={product.name} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = '/cloth/cotton.png';
+            }}
+          />
         </div>
 
         {/* Column 2: Information */}
@@ -119,7 +132,7 @@ export const ProductDetailsPage = () => {
               ${product.price.toFixed(2)}
             </div>
             <div style={{ color: 'var(--fg-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-              per {product.unit_of_measure || 'unit'}
+              per {product.specifications?.price_unit || 'unit'}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid rgba(192, 108, 62, 0.2)' }}>
@@ -129,7 +142,7 @@ export const ProductDetailsPage = () => {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem' }}>
                 <span style={{ color: 'var(--fg-secondary)' }}>Minimum Order</span>
-                <span style={{ fontWeight: 600 }}>{product.min_order_quantity || 1} units</span>
+                <span style={{ fontWeight: 600 }}>{product.specifications?.moq_quantity || 1} {product.specifications?.moq_unit || 'units'}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem' }}>
                 <span style={{ color: 'var(--fg-secondary)' }}>Lead Time</span>
@@ -142,7 +155,7 @@ export const ProductDetailsPage = () => {
               <div style={{ display: 'flex', alignItems: 'center', border: '1px solid rgba(192, 108, 62, 0.3)', borderRadius: '8px', overflow: 'hidden', backgroundColor: 'var(--card-bg)' }}>
                 <button 
                   style={{ flex: 1, padding: '0.75rem', background: 'transparent', border: 'none', borderRight: '1px solid rgba(192, 108, 62, 0.2)', cursor: 'pointer', fontWeight: 600, color: 'var(--fg-color)' }}
-                  onClick={() => setQuantity(Math.max(product.min_order_quantity || 1, quantity - 1))}
+                  onClick={() => setQuantity(Math.max(product.specifications?.moq_quantity || 1, quantity - 1))}
                 >-</button>
                 <div style={{ padding: '0.75rem 1.5rem', fontWeight: 700, color: 'var(--primary-color)' }}>{quantity}</div>
                 <button 
@@ -155,12 +168,12 @@ export const ProductDetailsPage = () => {
             {(user?.role === 'buyer' || !user) ? (
               <button 
                 className="btn-primary" 
-                style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', marginBottom: '1rem' }} 
+                style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', marginBottom: '1rem', backgroundColor: isAdded ? '#888' : '', borderColor: isAdded ? '#888' : '' }} 
                 onClick={handleAddToCart} 
-                disabled={adding || !inStock}
+                disabled={adding || isAdded || !inStock}
               >
                 <ShoppingCart size={20} />
-                {!inStock ? 'Out of Stock' : adding ? 'Adding to Cart...' : 'Add to Cart'}
+                {!inStock ? 'Out of Stock' : adding ? 'Adding to Cart...' : isAdded ? 'Added to Cart' : 'Add to Cart'}
               </button>
             ) : null}
 

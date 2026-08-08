@@ -9,17 +9,20 @@ export const SupplierProductsPage = () => {
   const user = useAuthStore(state => state.user);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [skip, setSkip] = useState(0);
+  const limit = 20;
 
   useEffect(() => {
     if (user?.id) {
-      getProducts(undefined, user.id)
+      setLoading(true);
+      getProducts(undefined, user.id, skip, limit)
         .then(setProducts)
         .catch(console.error)
         .finally(() => setLoading(false));
     }
-  }, [user]);
+  }, [user, skip]);
 
-  if (loading) return <div className="p-12 text-center text-slate-500">Loading products...</div>;
+  if (loading && products.length === 0) return <div className="p-12 text-center text-slate-500">Loading products...</div>;
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -45,7 +48,7 @@ export const SupplierProductsPage = () => {
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-slate-100 rounded overflow-hidden">
                     {product.primary_image_url ? (
-                      <img src={product.primary_image_url} alt="img" className="w-full h-full object-cover"/>
+                      <img src={product.primary_image_url} alt="img" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/cloth/cotton.png'; }} />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">No Img</div>
                     )}
@@ -68,6 +71,28 @@ export const SupplierProductsPage = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {products.length > 0 && (
+        <div className="flex justify-center gap-4 mt-8">
+          <Button 
+            variant="outline" 
+            onClick={() => setSkip(Math.max(0, skip - limit))}
+            disabled={skip === 0 || loading}
+            className="cursor-pointer"
+          >
+            Previous
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => setSkip(skip + limit)}
+            disabled={products.length < limit || loading}
+            className="cursor-pointer"
+          >
+            Next
+          </Button>
         </div>
       )}
     </div>

@@ -57,3 +57,10 @@ class ProductUpdate(BaseModel):
     category_id: Optional[int] = None
     specifications: Optional[Dict[str, Any]] = None
     primary_image_url: Optional[str] = None
+
+class RecommendationItem(BaseModel):
+    product: ProductRead
+    reason: str
+
+class RecommendationResponse(BaseModel):
+    items: List[RecommendationItem]

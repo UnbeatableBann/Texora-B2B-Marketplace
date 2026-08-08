@@ -87,15 +87,54 @@ export const SupplierInventoryPage = () => {
                         {product.stock_quantity}
                       </td>
                       <td className="p-4 text-right">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          disabled={updating === product.id}
-                          onClick={() => handleUpdateStock(product.id, product.stock_quantity)}
-                          className="cursor-pointer"
-                        >
-                          {updating === product.id ? 'Updating...' : 'Update Stock'}
-                        </Button>
+                        <div className="flex gap-2 justify-end">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            disabled={updating === product.id}
+                            onClick={() => handleUpdateStock(product.id, product.stock_quantity)}
+                            className="cursor-pointer"
+                          >
+                            {updating === product.id ? 'Updating...' : 'Set Stock'}
+                          </Button>
+                          {product.status === 'OUT_OF_STOCK' ? (
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                              disabled={updating === product.id}
+                              onClick={async () => {
+                                setUpdating(product.id);
+                                try {
+                                  await api.patch(`/catalog/products/${product.id}`, { status: 'PUBLISHED' });
+                                  fetchInventory();
+                                } finally {
+                                  setUpdating(null);
+                                }
+                              }}
+                            >
+                              Mark Available
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="cursor-pointer"
+                              disabled={updating === product.id}
+                              onClick={async () => {
+                                setUpdating(product.id);
+                                try {
+                                  await api.patch(`/catalog/products/${product.id}`, { status: 'OUT_OF_STOCK' });
+                                  fetchInventory();
+                                } finally {
+                                  setUpdating(null);
+                                }
+                              }}
+                            >
+                              Mark Out of Stock
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -1,21 +1,43 @@
 import { useEffect, useState } from 'react';
-import { getProducts } from '../../../services/catalogService';
+import { getTrendingProducts, getHotSellingProducts, getRecommendedProducts } from '../../../services/catalogService';
 import { ProductCard } from '../components/ProductCard';
 import { useNavigate } from 'react-router';
+import { useAuthStore } from '../../auth/useAuthStore';
 
 import { Search, ArrowRight, ShieldCheck, Zap, TrendingUp, CheckCircle2, Box, Star } from 'lucide-react';
 
 export const HomePage = () => {
-  const [products, setProducts] = useState<any[]>([]);
+  const [trendingProducts, setTrendingProducts] = useState<any[]>([]);
+  const [hotSellingProducts, setHotSellingProducts] = useState<any[]>([]);
+  const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const navigate = useNavigate();
+  const user = useAuthStore(state => state.user);
+
+  let recommendationTitle = "Recommended For You";
+  let recommendationSubtitle = "Based on your sourcing preferences";
+
+  if (!user || user.role !== 'buyer' || !user.onboarding_completed) {
+    recommendationTitle = "Popular in the Marketplace";
+    recommendationSubtitle = "Trending products across all categories";
+  }
+
+  const showRecommendations = user?.role !== 'supplier';
 
 
   useEffect(() => {
-    getProducts()
-      .then(data => setProducts(data))
+    Promise.all([
+      getTrendingProducts().catch(() => []),
+      getHotSellingProducts().catch(() => []),
+      getRecommendedProducts().catch(() => [])
+    ])
+      .then(([trending, hot, recommended]) => {
+        setTrendingProducts(trending);
+        setHotSellingProducts(hot);
+        setRecommendedProducts(recommended);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -98,16 +120,16 @@ export const HomePage = () => {
                   <div>
                     <h4 style={{ fontSize: '0.85rem', color: 'var(--fg-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1.25rem', fontWeight: 700 }}>Trending Materials</h4>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <li style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--fg-color)', fontWeight: 500 }}><TrendingUp size={16} color="var(--fg-secondary)" /> Organic Cotton GSM 200</li>
-                      <li style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--fg-color)', fontWeight: 500 }}><TrendingUp size={16} color="var(--fg-secondary)" /> Recycled Polyester</li>
-                      <li style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--fg-color)', fontWeight: 500 }}><TrendingUp size={16} color="var(--fg-secondary)" /> Premium Silk Yarn</li>
+                      <li onClick={() => navigate('/marketplace?q=Organic Cotton')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--fg-color)', fontWeight: 500 }}><TrendingUp size={16} color="var(--fg-secondary)" /> Organic Cotton GSM 200</li>
+                      <li onClick={() => navigate('/marketplace?q=Recycled Polyester')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--fg-color)', fontWeight: 500 }}><TrendingUp size={16} color="var(--fg-secondary)" /> Recycled Polyester</li>
+                      <li onClick={() => navigate('/marketplace?category=Silk')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--fg-color)', fontWeight: 500 }}><TrendingUp size={16} color="var(--fg-secondary)" /> Premium Silk Yarn</li>
                     </ul>
                   </div>
                   <div>
                     <h4 style={{ fontSize: '0.85rem', color: 'var(--fg-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1.25rem', fontWeight: 700 }}>Discover Categories</h4>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      {['Cotton', 'Silk', 'Linen', 'Denim', 'Sustainable'].map(cat => (
-                        <span key={cat} className="badge" style={{ backgroundColor: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--fg-color)', padding: '8px 16px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500 }}>{cat}</span>
+                      {['Cotton', 'Silk', 'Linen', 'Denim', 'Organic'].map(cat => (
+                        <span key={cat} onClick={() => navigate(`/marketplace?category=${cat}`)} className="badge" style={{ backgroundColor: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--fg-color)', padding: '8px 16px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500 }}>{cat}</span>
                       ))}
                     </div>
                   </div>
@@ -210,15 +232,42 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* 5. Featured Products */}
-      <section className="container-custom" style={{ padding: '0 0 6rem 0' }}>
+      {/* 5. Trending Products */}
+      <section className="container-custom" style={{ padding: '0 0 4rem 0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
-          <h2 className="section-title" style={{ margin: 0 }}>Featured Textiles</h2>
+          <h2 className="section-title" style={{ margin: 0 }}>Trending Textiles</h2>
           <button className="btn-secondary" onClick={() => navigate('/marketplace')} style={{ border: 'none', padding: '0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary-color)' }}>
             View all <ArrowRight size={18} />
           </button>
         </div>
-        {renderProductGrid(products.slice(0, 4))}
+        {renderProductGrid(trendingProducts)}
+      </section>
+
+      {/* Recommended Products */}
+      {showRecommendations && (
+        <section className="container-custom" style={{ padding: '0 0 4rem 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
+            <div>
+              <h2 className="section-title" style={{ margin: 0 }}>{recommendationTitle}</h2>
+              <p style={{ color: 'var(--fg-secondary)', marginTop: '0.5rem', fontSize: '0.9rem' }}>{recommendationSubtitle}</p>
+            </div>
+            <button className="btn-secondary" onClick={() => navigate('/marketplace')} style={{ border: 'none', padding: '0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary-color)' }}>
+              View all <ArrowRight size={18} />
+            </button>
+          </div>
+          {renderProductGrid(recommendedProducts)}
+        </section>
+      )}
+
+      {/* Hot Selling Products */}
+      <section className="container-custom" style={{ padding: '0 0 6rem 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
+          <h2 className="section-title" style={{ margin: 0 }}>Hot Selling Textiles</h2>
+          <button className="btn-secondary" onClick={() => navigate('/marketplace')} style={{ border: 'none', padding: '0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary-color)' }}>
+            View all <ArrowRight size={18} />
+          </button>
+        </div>
+        {renderProductGrid(hotSellingProducts)}
       </section>
 
       {/* 6. Benefits Section */}

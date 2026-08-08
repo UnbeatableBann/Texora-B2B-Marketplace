@@ -17,6 +17,11 @@ export const register = async (data: any): Promise<User> => {
   return response.data;
 };
 
+export const googleAuth = async (credential: string, role?: string): Promise<AuthResponse> => {
+  const response = await api.post('/auth/google', { credential, role: role || 'buyer' });
+  return response.data;
+};
+
 export const getMe = async (): Promise<User> => {
   const response = await api.get('/auth/me');
   return response.data;

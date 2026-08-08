@@ -18,7 +18,7 @@ def create_category(db: Session, category: CategoryCreate):
 def get_products(db: Session, category_id: int = None, supplier_id: int = None, skip: int = 0, limit: int = 100, include_drafts: bool = False):
     query = db.query(Product)
     if not include_drafts:
-        query = query.filter(Product.status == "PUBLISHED")
+        query = query.filter(Product.status.in_(["PUBLISHED", "OUT_OF_STOCK"]))
     if category_id:
         query = query.filter(Product.category_id == category_id)
     if supplier_id:
@@ -44,5 +44,5 @@ def update_product(db: Session, db_product: Product, product_update: ProductUpda
     return db_product
 
 def delete_product(db: Session, db_product: Product):
-    db.delete(db_product)
+    db_product.status = "ARCHIVED"
     db.commit()

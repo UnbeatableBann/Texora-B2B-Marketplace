@@ -26,7 +26,7 @@ export const SupplierDashboardPage = () => {
   if (loading) return <div style={{ padding: '6rem 0', textAlign: 'center', color: 'var(--fg-secondary)', fontSize: '1.1rem' }}>Loading dashboard...</div>;
 
   const pendingOrders = orders.filter(o => ['PENDING', 'CONFIRMED', 'PREPARING', 'READY_FOR_DISPATCH'].includes(o.status));
-  const lowStockProducts = products.filter(p => p.inventory_count < 10);
+  const lowStockProducts = products.filter(p => p.stock_quantity < 10);
 
   return (
     <div className="container-custom" style={{ padding: '4rem 2rem', display: 'flex', flexDirection: 'column', gap: '3rem' }}>
@@ -126,11 +126,11 @@ export const SupplierDashboardPage = () => {
                   <div key={product.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
                       <div style={{ width: '56px', height: '56px', backgroundColor: 'var(--bg-color)', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-                        {product.primary_image_url && <img src={product.primary_image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                        {product.primary_image_url && <img src={product.primary_image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/cloth/cotton.png'; }} />}
                       </div>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--fg-color)', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{product.name}</div>
-                        <div style={{ fontSize: '0.9rem', color: 'var(--error-color)', fontWeight: 600, marginTop: '4px' }}>{product.inventory_count} remaining</div>
+                        <div style={{ fontSize: '0.9rem', color: 'var(--error-color)', fontWeight: 600, marginTop: '4px' }}>{product.stock_quantity} remaining</div>
                       </div>
                     </div>
                     <Link to={`/dashboard/supplier/products/${product.id}/edit`} className="btn-secondary" style={{ padding: '0.75rem 1.25rem', fontSize: '0.95rem' }}>Update</Link>

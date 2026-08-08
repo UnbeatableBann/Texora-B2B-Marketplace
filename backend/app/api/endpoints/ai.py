@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.db.database import get_db
 from app.api.deps import get_current_user, get_optional_current_user
 from app.models.user import User
 from pydantic import BaseModel
-from app.models.catalog import Product
-import random
+from app.services.ai_service import ai_provider
 
 router = APIRouter()
 
@@ -16,45 +15,45 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
+    products: Optional[List[Dict[str, Any]]] = None
     actions: List[Dict[str, str]] = []
 
 @router.post("/chat", response_model=ChatResponse)
 def ai_chat(
     request: ChatRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_optional_current_user)
-):
-    msg = request.message.lower()
-    role = current_user.role if current_user else "guest"
+    msg = request.message
+    user_context = ""
     
-    if "recommend" in msg or "suggest" in msg:
-        if role == "buyer" or role == "guest":
-            return ChatResponse(
-                response="Based on your preferences, I recommend these high-quality fabrics. They match your category and have great reviews from other buyers.",
-                actions=[{"type": "navigate", "target": "/marketplace"}]
-            )
-        else:
-            return ChatResponse(
-                response="You are a supplier. I can help you check your low stock items or pending orders."
-            )
+    if current_user and current_user.role == "buyer":
+        from app.models.profile import BuyerProfile
+        buyer_profile = db.query(BuyerProfile).filter(BuyerProfile.user_id == current_user.id).first()
+        if buyer_profile and buyer_profile.preferences:
+            user_context = f"The user is an authenticated buyer. Their preferences are: {buyer_profile.preferences}"
             
-    if "stock" in msg or "inventory" in msg:
-        if role == "supplier":
-            return ChatResponse(
-                response="I can take you to your inventory overview where you can see all your stock levels and update them as needed.",
-                actions=[{"type": "navigate", "target": "/dashboard/supplier/inventory"}]
-            )
-        else:
-            return ChatResponse(
-                response="You don't have access to supplier inventory."
-            )
-
-    if "orders" in msg:
-        return ChatResponse(
-            response="Let me take you to your orders page.",
-            actions=[{"type": "navigate", "target": "/orders"}]
-        )
+    # 1. Extract Intent
+    intent_data = ai_provider.extract_intent(msg)
+    
+    # 2. Handle based on intent
+    products = None
+    actions = []
+    
+    if intent_data.intent == "PRODUCT_SEARCH" and intent_data.criteria:
+        products = ai_provider.search_products(db, intent_data.criteria)
         
+    elif intent_data.intent == "GENERAL_MARKETPLACE_HELP":
+        # Check for simple dashboard/order intents as a fallback
+        lower_msg = msg.lower()
+        if "order" in lower_msg:
+            actions.append({"type": "navigate", "target": "/orders"})
+        elif "dashboard" in lower_msg or "inventory" in lower_msg:
+            if current_user and current_user.role == "supplier":
+                actions.append({"type": "navigate", "target": "/dashboard/supplier"})
+    
+    # 3. Generate natural language response
+    response_text = ai_provider.generate_response(msg, intent_data, products or [], user_context)
+    
     return ChatResponse(
-        response=f"I'm the FabricHub AI Assistant. You said: '{request.message}'. I can help you find products, check your dashboard, or navigate the marketplace."
+        response=response_text,
+        products=products,
+        actions=actions
     )

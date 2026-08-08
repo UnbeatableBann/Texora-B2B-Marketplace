@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { sendChatMessage } from '../../../services/aiService';
+import { ProductCard } from '../../catalog/components/ProductCard';
 
 export const AIAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{ role: 'user' | 'ai', text: string, actions?: any[] }[]>([]);
+  const [messages, setMessages] = useState<{ role: 'user' | 'ai', text: string, actions?: any[], products?: any[] }[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -32,7 +33,8 @@ export const AIAssistant = () => {
       setMessages(prev => [...prev, { 
         role: 'ai', 
         text: response.response, 
-        actions: response.actions 
+        actions: response.actions,
+        products: response.products
       }]);
     } catch (err) {
       console.error(err);
@@ -83,8 +85,8 @@ export const AIAssistant = () => {
             )}
             
             {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-3 rounded-2xl ${m.role === 'user' ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-white text-slate-800 border border-slate-200 rounded-tl-sm shadow-sm'}`}>
+              <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+                <div className={`max-w-[90%] p-3 rounded-2xl ${m.role === 'user' ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-white text-slate-800 border border-slate-200 rounded-tl-sm shadow-sm'}`}>
                   {m.text}
                   {m.actions && m.actions.length > 0 && (
                     <div className="mt-3 space-y-2">
@@ -102,6 +104,15 @@ export const AIAssistant = () => {
                     </div>
                   )}
                 </div>
+                {m.products && m.products.length > 0 && (
+                  <div className="mt-3 space-y-3 w-[90%]">
+                    {m.products.map((prod) => (
+                      <div key={prod.id} className="transform scale-[0.85] origin-top-left -mb-[15%]">
+                        <ProductCard product={prod} />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             
