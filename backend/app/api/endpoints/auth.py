@@ -4,13 +4,13 @@ from app.api.deps import get_current_user
 from app.db.database import get_db
 from app.models.user import User
 from app.repositories.user_repo import create_user, get_user_by_email
-from app.schemas.user import Token, UserCreate, UserRead, RefreshRequest
+from app.schemas.user import RefreshRequest, Token, UserCreate, UserRead
 from app.security.auth import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     create_access_token,
     create_refresh_token,
-    verify_refresh_token,
     verify_password,
+    verify_refresh_token,
 )
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
@@ -69,10 +69,12 @@ def refresh_token(request: RefreshRequest, db: Session = Depends(get_db)):
     return {"access_token": new_access_token, "refresh_token": new_refresh_token, "token_type": "bearer"}
 
 
-from pydantic import BaseModel
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
 import os
+
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
+from pydantic import BaseModel
+
 
 class GoogleAuth(BaseModel):
     credential: str
